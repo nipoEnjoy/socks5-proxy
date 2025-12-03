@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+}
+
+group = 'ru.nsu'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("dnsjava:dnsjava:3.6.3")
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+            '-Xlint:deprecation',
+            '-Xlint:unchecked',
+            '-Xlint:try',              // Ресурсы в try-with-resources, которые не реализуют AutoCloseable
+//            '-Xlint:cast',             // Бессмысленные приведения типов
+    ]
+    options.encoding = 'UTF-8'
+    options.warnings = true
+}
+
+test {
+    useJUnitPlatform()
+}
