@@ -5,6 +5,8 @@ import org.xbill.DNS.Record;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ProtocolFamily;
+import java.net.StandardProtocolFamily;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
@@ -74,12 +76,12 @@ public class Socks5Proxy {
 
     // TCP channel
     private ServerSocketChannel setupServerChannel() throws IOException {
-        ServerSocketChannel serverChannel = ServerSocketChannel.open();
+        ServerSocketChannel serverChannel = ServerSocketChannel.open(StandardProtocolFamily.INET);
         serverChannel.configureBlocking(false);
         serverChannel.bind(new InetSocketAddress(proxyPort));
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-        System.out.println("SOCKS5 Proxy started on port " + proxyPort);
+        System.out.println("SOCKS5 Proxy started on port " + serverChannel.getLocalAddress());
         return serverChannel;
     }
 
@@ -262,7 +264,13 @@ public class Socks5Proxy {
 
         if (connected) {
             System.out.println("Successfully connected to target host.");
-            session.sendSocks5Reply(session.getClientAttachment(), (byte) 0x00);
+            try {
+                session.sendSocks5Reply(session.getClientAttachment(), (byte) 0x00);
+            } catch (IOException e) {
+                System.err.println("handleConnect: Failed to send socks reply: " + e.getMessage());
+                e.printStackTrace();
+                closeConnection(session.getClientAttachment());
+            }
 
             session.setConnectionEstablished();
 
